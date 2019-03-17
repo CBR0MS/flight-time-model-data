@@ -16,6 +16,10 @@ This branch is for visualization of flight data as well:
 
  - [FlyGenius v.1 Dataviz](https://github.com/CBR0MS/flight-time-model-data/blob/master/visualization/v1/v1Modeling.md) (`visualization/v1/v1Modeling.md`)
 
+
+ - [FlyGenius v.2 Dataviz](https://github.com/CBR0MS/flight-time-model-data/blob/master/visualization/v2/v2Modeling.md) (`visualization/v2/v2Modeling.md`)
+
+
  ### Jupyter Notebooks 
 
  The original Jupyter notebooks used for visualization can be found on the `jupyter` branch. 
