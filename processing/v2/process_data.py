@@ -1,4 +1,5 @@
 import glob 
+import os
 import pandas as pd
 import json
 from functools import reduce
@@ -12,7 +13,8 @@ and working dictionary
 """
 def load_basic_airline_info():
 
-    this_data = pd.read_csv('flight-data/carriers_percent.csv', skipinitialspace=True, low_memory=False)
+    path = os.path.normpath(os.path.join(os.getcwd(), 'data/assorted/carriers_percent_more.csv'))
+    this_data = pd.read_csv(path, skipinitialspace=True, low_memory=False)
     airlines = []
     airlines_dict = {}
 
@@ -39,7 +41,9 @@ Load the airport names, ids, cities, states, and percent ontime from the lookup 
 the final object and working dictionary 
 """
 def load_basic_airport_info():
-    this_data = pd.read_csv('flight-data/airports.csv', skipinitialspace=True, low_memory=False)
+
+    path = os.path.normpath(os.path.join(os.getcwd(), 'data/assorted/airports.csv'))
+    this_data = pd.read_csv(path, skipinitialspace=True, low_memory=False)
     airports = []
     airports_dict = {}
 
@@ -75,7 +79,7 @@ Load a month's data from all the csv files for each year and create a dataframe
 """
 def load_month_data(month):
 
-    path = 'flight-data/*/*_' + str(month) + '.csv'
+    path = os.path.normpath(os.path.join(os.getcwd(), 'data/flight-data/*/*_' + str(month) + '.csv'))
     month_data = glob.glob(path)
     loaded_data = []
     for path in month_data:
@@ -90,7 +94,9 @@ def load_month_data(month):
     print('done!\nConsolidating dataframe... ', end=' ')
 
     df = df[['Reporting_Airline', 'Origin',
-             'Dest', 'DepDelay', 'ArrDelay', 'TaxiIn', 'TaxiOut', 'AirTime']]
+             'Dest', 'DepDelay', 'ArrDelay',
+             'TaxiIn', 'TaxiOut', 'AirTime', 
+             'Flight_Number_Reporting_Airline']]
     print('done!\nDropping null values from dataframe... ', end=' ')
 
     df.dropna(inplace = True)
@@ -109,14 +115,18 @@ def calculate_month_flight_data(month, data, airports, airlines, routes):
         flight_dest = row['Dest']
         flight_airline = row['Reporting_Airline']
         route_key = flight_origin + '_' + flight_dest
+        flight_number = flight_airline + '_' + str(row['Flight_Number_Reporting_Airline'])
 
         if route_key in routes:
             routes[route_key]['flights'] += 1
+            if flight_number not in routes[route_key]['flight_numbers']:
+                routes[route_key]['flight_numbers'].append(flight_number)
             if flight_airline not in routes[route_key]['airlines']:
                 routes[route_key]['airlines'].append(flight_airline)
             routes[route_key]['time'] += row['AirTime']
         else :
             routes[route_key] = {}
+            routes[route_key]['flight_numbers'] = [flight_number]
             routes[route_key]['flights'] = 1
             routes[route_key]['airlines'] = [flight_airline]
             routes[route_key]['time'] = row['AirTime']
@@ -278,6 +288,7 @@ routes = []
 for key in routes_dict.keys():
     route_object = {}
     route_object['route_name'] = key
+    route_object['route_flight_numbers'] = routes_dict[key]['flight_numbers']
     route_object['route_origin_airport'] = routes_dict[key]['origin']
     route_object['route_destination_airport'] = routes_dict[key]['destination']
     route_object['route_flights_per_year'] = int(routes_dict[key]['flights'] / 3) 
@@ -291,7 +302,8 @@ data = {}
 data['airlines'] = airlines
 data['airports'] = airports
 data['routes'] = routes
-with open('meta/all_data.json', 'w') as fp:
+path = os.path.normpath(os.path.join(os.getcwd(), 'processing/v2/meta/all_data.json'))
+with open(path, 'w') as fp:
         json.dump(data, fp)
 
 
